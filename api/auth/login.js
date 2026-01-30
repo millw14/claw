@@ -19,10 +19,10 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Email and password are required' });
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
     }
 
     let client;
@@ -33,23 +33,23 @@ export default async function handler(req, res) {
         const db = client.db('clawcrypt');
         const users = db.collection('users');
 
-        // Find user by email
-        const user = await users.findOne({ email });
+        // Find user by username
+        const user = await users.findOne({ username });
         
         if (!user) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Invalid username or password' });
         }
 
         // Check password
         const isValid = await bcrypt.compare(password, user.password);
         
         if (!isValid) {
-            return res.status(401).json({ error: 'Invalid email or password' });
+            return res.status(401).json({ error: 'Invalid username or password' });
         }
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user._id, username: user.username, email: user.email },
+            { userId: user._id, username: user.username },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -59,8 +59,7 @@ export default async function handler(req, res) {
             token,
             user: { 
                 id: user._id, 
-                username: user.username, 
-                email: user.email 
+                username: user.username
             } 
         });
 

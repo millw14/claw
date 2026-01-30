@@ -17,10 +17,14 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { username, email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!username || !email || !password) {
-        return res.status(400).json({ error: 'Username, email and password are required' });
+    if (!username || !password) {
+        return res.status(400).json({ error: 'Username and password are required' });
+    }
+
+    if (username.length < 3) {
+        return res.status(400).json({ error: 'Username must be at least 3 characters' });
     }
 
     if (password.length < 6) {
@@ -35,17 +39,11 @@ export default async function handler(req, res) {
         const db = client.db('clawcrypt');
         const users = db.collection('users');
 
-        // Check if user exists
-        const existingUser = await users.findOne({ 
-            $or: [{ email }, { username }] 
-        });
+        // Check if username exists
+        const existingUser = await users.findOne({ username });
         
         if (existingUser) {
-            return res.status(400).json({ 
-                error: existingUser.email === email 
-                    ? 'Email already registered' 
-                    : 'Username already taken' 
-            });
+            return res.status(400).json({ error: 'Username already taken' });
         }
 
         // Hash password
@@ -54,7 +52,6 @@ export default async function handler(req, res) {
         // Create user
         const result = await users.insertOne({
             username,
-            email,
             password: hashedPassword,
             createdAt: new Date()
         });
@@ -63,8 +60,7 @@ export default async function handler(req, res) {
             success: true, 
             user: { 
                 id: result.insertedId, 
-                username, 
-                email 
+                username
             } 
         });
 

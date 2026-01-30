@@ -19,13 +19,13 @@ export class AuthService {
         if (callback) callback(AuthService.currentUser);
     }
 
-    // Sign up with username, email and password
-    static async signUp(email, password, username) {
+    // Sign up with username and password
+    static async signUp(username, password) {
         try {
             const response = await fetch(`${API_BASE}/signup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, password })
+                body: JSON.stringify({ username, password })
             });
 
             const data = await response.json();
@@ -35,19 +35,19 @@ export class AuthService {
             }
 
             // Auto login after signup
-            return await AuthService.signIn(email, password);
+            return await AuthService.signIn(username, password);
         } catch (error) {
             return { success: false, error: 'Network error. Please try again.' };
         }
     }
 
-    // Sign in with email and password
-    static async signIn(email, password) {
+    // Sign in with username and password
+    static async signIn(username, password) {
         try {
             const response = await fetch(`${API_BASE}/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ username, password })
             });
 
             const data = await response.json();
@@ -90,7 +90,7 @@ export class AuthService {
     // Get user display name
     static getUserDisplayName() {
         if (!AuthService.currentUser) return 'Guest';
-        return AuthService.currentUser.username || AuthService.currentUser.email?.split('@')[0] || 'User';
+        return AuthService.currentUser.username || 'User';
     }
 
     // Get auth token for API calls
