@@ -10,8 +10,8 @@ export class LoadingScreen {
         
         // Crab sprite images for animation
         this.crabFrames = [
-            '/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png',
-            '/assets/ChatGPT Image Jan 30, 2026, 10_19_55 AM.png'
+            '/assets/crab-1.png',
+            '/assets/crab-2.png'
         ];
         this.currentFrame = 0;
         this.frameInterval = null;

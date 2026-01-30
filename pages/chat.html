@@ -6,8 +6,8 @@
     <title>AI Chat - ClawCrypt</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png">
-    <link rel="apple-touch-icon" href="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png">
+    <link rel="icon" type="image/png" href="/assets/crab-1.png">
+    <link rel="apple-touch-icon" href="/assets/crab-1.png">
     
     <!-- Primary Meta Tags -->
     <meta name="title" content="AI Chat - ClawCrypt">
@@ -19,13 +19,13 @@
     <meta property="og:url" content="https://clawcrypt.io/chat">
     <meta property="og:title" content="AI Chat - ClawCrypt">
     <meta property="og:description" content="Chat with AI to analyze Solana wallets. Ask questions in plain English and get instant insights.">
-    <meta property="og:image" content="/assets/ChatGPT Image Jan 30, 2026, 09_52_01 AM.png">
+    <meta property="og:image" content="/assets/crab-bg.png">
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:title" content="AI Chat - ClawCrypt">
     <meta property="twitter:description" content="Chat with AI to analyze Solana wallets. Ask questions in plain English and get instant insights.">
-    <meta property="twitter:image" content="/assets/ChatGPT Image Jan 30, 2026, 09_52_01 AM.png">
+    <meta property="twitter:image" content="/assets/crab-bg.png">
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="/src/css/main.css">
@@ -39,7 +39,7 @@
     <div class="auth-overlay" id="auth-overlay">
         <div class="auth-modal">
             <div class="auth-header">
-                <img src="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png" alt="ClawCrypt" class="auth-logo">
+                <img src="/assets/crab-1.png" alt="ClawCrypt" class="auth-logo">
                 <h2 class="auth-title">Welcome to ClawCrypt</h2>
                 <p class="auth-subtitle">Sign in to start chatting with AI</p>
             </div>
@@ -55,11 +55,11 @@
             <form class="auth-form active" id="signin-form">
                 <div class="form-group">
                     <label for="signin-email">Email</label>
-                    <input type="email" id="signin-email" placeholder="Enter your email" required>
+                    <input type="email" id="signin-email" placeholder="Enter your email" autocomplete="email" required>
                 </div>
                 <div class="form-group">
                     <label for="signin-password">Password</label>
-                    <input type="password" id="signin-password" placeholder="Enter your password" required>
+                    <input type="password" id="signin-password" placeholder="Enter your password" autocomplete="current-password" required>
                 </div>
                 <button type="submit" class="auth-submit">Sign In</button>
             </form>
@@ -68,15 +68,15 @@
             <form class="auth-form" id="signup-form">
                 <div class="form-group">
                     <label for="signup-name">Display Name</label>
-                    <input type="text" id="signup-name" placeholder="Choose a display name">
+                    <input type="text" id="signup-name" placeholder="Choose a display name" autocomplete="name">
                 </div>
                 <div class="form-group">
                     <label for="signup-email">Email</label>
-                    <input type="email" id="signup-email" placeholder="Enter your email" required>
+                    <input type="email" id="signup-email" placeholder="Enter your email" autocomplete="email" required>
                 </div>
                 <div class="form-group">
                     <label for="signup-password">Password</label>
-                    <input type="password" id="signup-password" placeholder="Min 6 characters" required>
+                    <input type="password" id="signup-password" placeholder="Min 6 characters" autocomplete="new-password" required>
                 </div>
                 <button type="submit" class="auth-submit">Create Account</button>
             </form>
