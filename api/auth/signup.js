@@ -1,8 +1,6 @@
 const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
 
-const uri = process.env.MONGODB_URI;
-
 module.exports = async function handler(req, res) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -17,7 +15,14 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { username, password } = req.body;
+    // Check environment variable
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        console.error('MONGODB_URI not set');
+        return res.status(500).json({ error: 'Database configuration error' });
+    }
+
+    const { username, password } = req.body || {};
 
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
@@ -59,15 +64,21 @@ module.exports = async function handler(req, res) {
         return res.status(201).json({ 
             success: true, 
             user: { 
-                id: result.insertedId, 
+                id: result.insertedId.toString(), 
                 username
             } 
         });
 
     } catch (error) {
-        console.error('Signup error:', error);
-        return res.status(500).json({ error: 'Server error. Please try again.' });
+        console.error('Signup error:', error.message);
+        return res.status(500).json({ error: 'Server error: ' + error.message });
     } finally {
-        if (client) await client.close();
+        if (client) {
+            try {
+                await client.close();
+            } catch (e) {
+                console.error('Error closing connection:', e);
+            }
+        }
     }
-}
+};

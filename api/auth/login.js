@@ -2,9 +2,6 @@ const { MongoClient } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const uri = process.env.MONGODB_URI;
-const JWT_SECRET = process.env.JWT_SECRET || 'clawcrypt-secret-key-change-in-production';
-
 module.exports = async function handler(req, res) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,7 +16,21 @@ module.exports = async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const { username, password } = req.body;
+    // Check environment variables
+    const uri = process.env.MONGODB_URI;
+    const JWT_SECRET = process.env.JWT_SECRET;
+    
+    if (!uri) {
+        console.error('MONGODB_URI not set');
+        return res.status(500).json({ error: 'Database configuration error' });
+    }
+    
+    if (!JWT_SECRET) {
+        console.error('JWT_SECRET not set');
+        return res.status(500).json({ error: 'Auth configuration error' });
+    }
+
+    const { username, password } = req.body || {};
 
     if (!username || !password) {
         return res.status(400).json({ error: 'Username and password are required' });
@@ -49,7 +60,7 @@ module.exports = async function handler(req, res) {
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user._id, username: user.username },
+            { userId: user._id.toString(), username: user.username },
             JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -58,15 +69,21 @@ module.exports = async function handler(req, res) {
             success: true, 
             token,
             user: { 
-                id: user._id, 
+                id: user._id.toString(), 
                 username: user.username
             } 
         });
 
     } catch (error) {
-        console.error('Login error:', error);
-        return res.status(500).json({ error: 'Server error. Please try again.' });
+        console.error('Login error:', error.message);
+        return res.status(500).json({ error: 'Server error: ' + error.message });
     } finally {
-        if (client) await client.close();
+        if (client) {
+            try {
+                await client.close();
+            } catch (e) {
+                console.error('Error closing connection:', e);
+            }
+        }
     }
-}
+};
