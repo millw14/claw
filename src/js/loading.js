@@ -10,8 +10,8 @@ export class LoadingScreen {
         
         // Crab sprite images for animation
         this.crabFrames = [
-            '/assets/crab-1.png',
-            '/assets/crab-2.png'
+            '/crab-1.png',
+            '/crab-2.png'
         ];
         this.currentFrame = 0;
         this.frameInterval = null;
