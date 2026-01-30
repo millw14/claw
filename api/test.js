@@ -1,4 +1,6 @@
-module.exports = async function handler(req, res) {
+import { MongoClient } from 'mongodb';
+
+export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     
     const hasMongoUri = !!process.env.MONGODB_URI;
@@ -8,7 +10,6 @@ module.exports = async function handler(req, res) {
     let mongoStatus = 'not tested';
     if (hasMongoUri) {
         try {
-            const { MongoClient } = require('mongodb');
             const client = new MongoClient(process.env.MONGODB_URI);
             await client.connect();
             await client.db('clawcrypt').command({ ping: 1 });
@@ -26,4 +27,4 @@ module.exports = async function handler(req, res) {
         },
         mongoStatus
     });
-};
+}
