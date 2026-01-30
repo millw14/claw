@@ -1,0 +1,433 @@
+/* ==================== HOME PAGE ==================== */
+.home-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 1s ease, visibility 1s ease;
+    overflow: hidden;
+}
+
+.home-page.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Background with darker overlay and vignette */
+.home-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('/assets/ChatGPT Image Jan 30, 2026, 09_52_01 AM.png') center center no-repeat;
+    background-size: cover;
+    z-index: 0;
+    filter: brightness(0.6);
+}
+
+.home-background::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.7) 0%,
+        rgba(0, 0, 0, 0.4) 40%,
+        rgba(0, 0, 0, 0.4) 60%,
+        rgba(0, 0, 0, 0.8) 100%
+    );
+}
+
+.home-background::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(
+        ellipse at center,
+        transparent 0%,
+        rgba(0, 0, 0, 0.5) 100%
+    );
+}
+
+/* Chat Bubbles - Cleaner positioning */
+.chat-bubble {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: 12px;
+    padding: 12px 18px;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    max-width: 240px;
+    backdrop-filter: blur(10px);
+    z-index: 10;
+    animation: floatBubble 6s ease-in-out infinite;
+    cursor: default;
+    transition: all 0.3s ease;
+    opacity: 0.85;
+}
+
+.chat-bubble:hover {
+    border-color: #dc2626;
+    opacity: 1;
+    transform: translateY(-5px) !important;
+}
+
+.chat-bubble.left { 
+    border-left: 3px solid #dc2626;
+    border-radius: 0 12px 12px 0;
+}
+
+.chat-bubble.right { 
+    border-right: 3px solid #dc2626;
+    border-radius: 12px 0 0 12px;
+    text-align: right;
+}
+
+@keyframes floatBubble {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+
+.bubble-icon {
+    color: #dc2626;
+    margin-right: 6px;
+    font-weight: bold;
+    font-size: 11px;
+}
+
+.chat-bubble.right .bubble-icon {
+    margin-right: 0;
+    margin-left: 6px;
+}
+
+/* Typing Dots */
+.typing-dots {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+    justify-content: center;
+}
+
+.typing-dots span {
+    width: 6px;
+    height: 6px;
+    background: #dc2626;
+    border-radius: 50%;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: 0s; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Center Content */
+.home-content {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    text-align: center;
+    padding: 40px;
+}
+
+/* Title - Solid fill for better readability */
+.main-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 72px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 16px;
+    margin-bottom: 25px;
+    text-shadow: 
+        0 0 40px rgba(220, 38, 38, 0.8),
+        0 0 80px rgba(220, 38, 38, 0.4),
+        0 4px 20px rgba(0, 0, 0, 0.8);
+    position: relative;
+}
+
+.main-title::after {
+    content: 'CLAWCRYPT';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(220, 38, 38, 0.5);
+    z-index: -1;
+    transform: translate(2px, 2px);
+}
+
+/* Subtitle line */
+.subtitle {
+    font-size: 12px;
+    color: #dc2626;
+    letter-spacing: 8px;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    opacity: 0.8;
+}
+
+.tagline {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.75);
+    max-width: 500px;
+    line-height: 1.9;
+    margin-bottom: 45px;
+    letter-spacing: 1px;
+}
+
+.tagline span {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+/* Enter Button */
+.enter-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 40px;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid #dc2626;
+    color: #fff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    cursor: pointer;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+.enter-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(220, 38, 38, 0.3), transparent);
+    animation: btnShine 3s infinite;
+}
+
+@keyframes btnShine {
+    0% { left: -100%; }
+    50%, 100% { left: 100%; }
+}
+
+.enter-btn:hover {
+    background: #dc2626;
+    color: #0a0a0a;
+    box-shadow: 0 0 40px rgba(220, 38, 38, 0.6);
+    transform: translateY(-2px);
+}
+
+.notification-badge {
+    background: #dc2626;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.enter-btn:hover .notification-badge {
+    background: #fff;
+    color: #dc2626;
+}
+
+/* Feature Labels - Cleaner look */
+.feature-labels {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+}
+
+.feature-label {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(220, 38, 38, 0.3);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.feature-label:hover {
+    color: #dc2626;
+    border-bottom-color: #dc2626;
+}
+
+/* Footer */
+.home-footer {
+    position: absolute;
+    bottom: 30px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 0 50px;
+    z-index: 20;
+}
+
+.footer-links {
+    display: flex;
+    gap: 40px;
+}
+
+.footer-links a {
+    color: rgba(255, 255, 255, 0.35);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+    color: #dc2626;
+}
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+
+@media (max-width: 1024px) {
+    .chat-bubble {
+        font-size: 11px;
+        padding: 10px 14px;
+        max-width: 180px;
+    }
+
+    .main-title {
+        font-size: 56px;
+        letter-spacing: 12px;
+    }
+
+    .feature-labels {
+        gap: 5px;
+        bottom: 75px;
+    }
+
+    .feature-label {
+        font-size: 9px;
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .chat-bubble {
+        display: none;
+    }
+
+    .home-content {
+        padding: 20px;
+    }
+
+    .main-title {
+        font-size: 38px;
+        letter-spacing: 8px;
+        margin-bottom: 15px;
+    }
+
+    .main-title::after {
+        display: none;
+    }
+
+    .subtitle {
+        font-size: 10px;
+        letter-spacing: 5px;
+        margin-bottom: 20px;
+    }
+
+    .tagline {
+        font-size: 13px;
+        line-height: 1.7;
+        margin-bottom: 35px;
+        padding: 0 15px;
+    }
+
+    .enter-btn {
+        padding: 14px 30px;
+        font-size: 12px;
+        letter-spacing: 3px;
+    }
+
+    .feature-labels {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 5px;
+        bottom: 65px;
+        padding: 0 20px;
+        width: 100%;
+    }
+
+    .feature-label {
+        font-size: 8px;
+        padding: 5px 10px;
+    }
+
+    .home-footer {
+        bottom: 20px;
+        padding: 0 20px;
+    }
+
+    .footer-links {
+        gap: 25px;
+    }
+
+    .footer-links a {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 28px;
+        letter-spacing: 5px;
+    }
+
+    .subtitle {
+        font-size: 8px;
+        letter-spacing: 4px;
+    }
+
+    .tagline {
+        font-size: 12px;
+    }
+
+    .enter-btn {
+        padding: 12px 24px;
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
+
+    .feature-labels {
+        display: none;
+    }
+}

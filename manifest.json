@@ -1,0 +1,21 @@
+{
+  "name": "ClawCrypt - AI Wallet Intelligence",
+  "short_name": "ClawCrypt",
+  "description": "AI-powered Solana wallet intelligence. Discover, track, and understand crypto wallets using plain English.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#dc2626",
+  "icons": [
+    {
+      "src": "/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

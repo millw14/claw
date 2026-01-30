@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - ClawCrypt</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png">
+    <link rel="apple-touch-icon" href="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png">
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Documentation - ClawCrypt">
+    <meta name="description" content="Learn how to use ClawCrypt for Solana wallet intelligence. Natural language search, wallet profiles, and behavior analysis.">
+    <meta name="theme-color" content="#dc2626">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://clawcrypt.io/docs">
+    <meta property="og:title" content="Documentation - ClawCrypt">
+    <meta property="og:description" content="Learn how to use ClawCrypt for Solana wallet intelligence. Natural language search, wallet profiles, and behavior analysis.">
+    <meta property="og:image" content="/assets/ChatGPT Image Jan 30, 2026, 09_52_01 AM.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:title" content="Documentation - ClawCrypt">
+    <meta property="twitter:description" content="Learn how to use ClawCrypt for Solana wallet intelligence.">
+    <meta property="twitter:image" content="/assets/ChatGPT Image Jan 30, 2026, 09_52_01 AM.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/src/css/main.css">
+    <link rel="stylesheet" href="/src/css/pages.css">
+</head>
+<body class="docs-page">
+    <canvas id="matrix-canvas"></canvas>
+    
+    <!-- Scroll Progress Bar -->
+    <div class="scroll-progress" id="scroll-progress"></div>
+
+    <div class="page-container">
+        <!-- Header -->
+        <header class="page-header">
+            <a href="/" class="logo">CLAWCRYPT</a>
+            <nav class="nav-links">
+                <a href="/pages/docs.html" class="active">Docs</a>
+                <a href="/pages/features.html">Features</a>
+                <a href="/">Home</a>
+            </nav>
+        </header>
+
+        <!-- Main Content -->
+        <main class="docs-content">
+            <aside class="docs-sidebar">
+                <h3>Getting Started</h3>
+                <ul>
+                    <li><a href="#introduction">Introduction</a></li>
+                    <li><a href="#quick-start">Quick Start</a></li>
+                    <li><a href="#how-it-works">How It Works</a></li>
+                </ul>
+                <h3>Core Features</h3>
+                <ul>
+                    <li><a href="#natural-language">Natural Language Search</a></li>
+                    <li><a href="#wallet-discovery">Wallet Discovery</a></li>
+                    <li><a href="#wallet-profiles">Wallet Profiles</a></li>
+                    <li><a href="#behavior-analysis">Behavior Analysis</a></li>
+                    <li><a href="#alerts">Alerts & Monitoring</a></li>
+                </ul>
+                <h3>API Reference</h3>
+                <ul>
+                    <li><a href="#api-overview">Overview</a></li>
+                    <li><a href="#endpoints">Endpoints</a></li>
+                </ul>
+            </aside>
+
+            <div class="docs-main">
+                <section id="introduction">
+                    <h1>Introduction</h1>
+                    <p>ClawCrypt is an AI-powered wallet intelligence platform for Solana. Instead of complex dashboards and technical queries, you simply ask questions in plain English.</p>
+                    <div class="code-block">
+                        <span class="code-label">Example</span>
+                        <code>"Track this wallet and tell me when it buys"</code>
+                    </div>
+                </section>
+
+                <section id="quick-start">
+                    <h2>Quick Start</h2>
+                    <div class="steps">
+                        <div class="step">
+                            <span class="step-number">1</span>
+                            <div>
+                                <h4>Enter the Chat</h4>
+                                <p>Click "Enter Chat" on the home page to open the AI interface.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">2</span>
+                            <div>
+                                <h4>Ask a Question</h4>
+                                <p>Type any wallet-related question in plain English.</p>
+                            </div>
+                        </div>
+                        <div class="step">
+                            <span class="step-number">3</span>
+                            <div>
+                                <h4>Get Insights</h4>
+                                <p>Receive AI-analyzed results with actionable intelligence.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="how-it-works">
+                    <h2>How It Works</h2>
+                    <p>ClawCrypt uses a combination of:</p>
+                    <ul class="feature-list">
+                        <li><strong>Natural Language Processing</strong> - Understands your questions and converts them to on-chain queries</li>
+                        <li><strong>Solana RPC</strong> - Fetches real-time blockchain data</li>
+                        <li><strong>Helius API</strong> - Enhanced transaction parsing and wallet analysis</li>
+                        <li><strong>AI Classification</strong> - Labels wallet behavior patterns</li>
+                    </ul>
+                </section>
+
+                <section id="natural-language">
+                    <h2>Natural Language Search</h2>
+                    <p>No commands to memorize. Just type what you want:</p>
+                    <div class="example-queries">
+                        <div class="query">"Track this wallet"</div>
+                        <div class="query">"Find wallets holding over 2M $TOKEN"</div>
+                        <div class="query">"Show wallets active during this launch"</div>
+                        <div class="query">"Who bought early and never sold?"</div>
+                    </div>
+                </section>
+
+                <section id="wallet-discovery">
+                    <h2>Wallet Discovery</h2>
+                    <p>Find wallets even without the full address:</p>
+                    <ul class="feature-list">
+                        <li><strong>Partial Address</strong> - First or last characters</li>
+                        <li><strong>SNS/ENS Names</strong> - Domain-based lookup</li>
+                        <li><strong>Token-based</strong> - "Top holders of $XYZ"</li>
+                        <li><strong>Time-based</strong> - "Wallets active around Jan 2024"</li>
+                    </ul>
+                </section>
+
+                <section id="wallet-profiles">
+                    <h2>Wallet Profiles</h2>
+                    <p>Auto-generated profiles include:</p>
+                    <ul class="feature-list">
+                        <li>Current SOL & token balances</li>
+                        <li>Token holdings breakdown</li>
+                        <li>First seen / last active time</li>
+                        <li>Activity frequency</li>
+                        <li>Top tokens interacted with</li>
+                        <li>Simple PnL estimate</li>
+                    </ul>
+                </section>
+
+                <section id="behavior-analysis">
+                    <h2>Behavior Analysis</h2>
+                    <p>AI classifies wallets into behavior types:</p>
+                    <div class="behavior-tags">
+                        <span class="tag whale">Whale</span>
+                        <span class="tag sniper">Sniper</span>
+                        <span class="tag farmer">Farmer</span>
+                        <span class="tag diamond">Diamond Hands</span>
+                        <span class="tag dumper">Serial Dumper</span>
+                        <span class="tag team">Team-linked</span>
+                    </div>
+                </section>
+
+                <section id="alerts">
+                    <h2>Alerts & Monitoring</h2>
+                    <p>Subscribe to real-time alerts:</p>
+                    <ul class="feature-list">
+                        <li>Wallet buys/sells</li>
+                        <li>Large transfers</li>
+                        <li>Token accumulation</li>
+                        <li>Dormant wallet activity</li>
+                    </ul>
+                    <p class="note">Alerts delivered via Telegram, Discord, or in-app notifications.</p>
+                </section>
+
+                <section id="api-overview">
+                    <h2>API Overview</h2>
+                    <p>For developers who want programmatic access:</p>
+                    <div class="code-block">
+                        <span class="code-label">Base URL</span>
+                        <code>https://api.clawcrypt.io/v1</code>
+                    </div>
+                </section>
+
+                <section id="endpoints">
+                    <h2>Endpoints</h2>
+                    <div class="endpoint">
+                        <span class="method get">GET</span>
+                        <code>/wallet/{address}</code>
+                        <p>Get wallet profile and analysis</p>
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <code>/query</code>
+                        <p>Natural language query endpoint</p>
+                    </div>
+                    <div class="endpoint">
+                        <span class="method post">POST</span>
+                        <code>/alerts/subscribe</code>
+                        <p>Subscribe to wallet alerts</p>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { MatrixRain } from '/src/js/matrix.js';
+        const matrix = new MatrixRain('matrix-canvas');
+        matrix.start();
+
+        // Scroll Spy functionality
+        class ScrollSpy {
+            constructor() {
+                this.sections = document.querySelectorAll('.docs-main section[id]');
+                this.navLinks = document.querySelectorAll('.docs-sidebar a');
+                this.offset = 100; // Offset from top to trigger
+                
+                this.init();
+            }
+
+            init() {
+                // Initial check
+                this.highlightOnScroll();
+                
+                // Listen to scroll
+                window.addEventListener('scroll', () => this.highlightOnScroll());
+                
+                // Smooth scroll for nav links
+                this.navLinks.forEach(link => {
+                    link.addEventListener('click', (e) => this.smoothScroll(e));
+                });
+            }
+
+            highlightOnScroll() {
+                const scrollPos = window.scrollY + this.offset;
+                
+                this.sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    const sectionHeight = section.offsetHeight;
+                    const sectionId = section.getAttribute('id');
+                    
+                    if (scrollPos >= sectionTop && scrollPos < sectionTop + sectionHeight) {
+                        // Remove active from all links
+                        this.navLinks.forEach(link => link.classList.remove('active'));
+                        
+                        // Add active to current section link
+                        const activeLink = document.querySelector(`.docs-sidebar a[href="#${sectionId}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                });
+
+                // Handle case when at the very top
+                if (window.scrollY < 50) {
+                    this.navLinks.forEach(link => link.classList.remove('active'));
+                    if (this.navLinks[0]) {
+                        this.navLinks[0].classList.add('active');
+                    }
+                }
+            }
+
+            smoothScroll(e) {
+                e.preventDefault();
+                const targetId = e.target.getAttribute('href');
+                const targetSection = document.querySelector(targetId);
+                
+                if (targetSection) {
+                    const targetPosition = targetSection.offsetTop - 80;
+                    window.scrollTo({
+                        top: targetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+
+        // Scroll Progress Bar
+        class ScrollProgress {
+            constructor() {
+                this.progressBar = document.getElementById('scroll-progress');
+                this.init();
+            }
+
+            init() {
+                window.addEventListener('scroll', () => this.updateProgress());
+                this.updateProgress();
+            }
+
+            updateProgress() {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const progress = (scrollTop / docHeight) * 100;
+                this.progressBar.style.width = progress + '%';
+            }
+        }
+
+        // Initialize
+        new ScrollSpy();
+        new ScrollProgress();
+    </script>
+</body>
+</html>

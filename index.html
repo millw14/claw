@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClawCrypt - AI Wallet Intelligence</title>
+    
+    <!-- Favicon & Manifest -->
+    <link rel="icon" type="image/png" href="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png">
+    <link rel="apple-touch-icon" href="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="ClawCrypt - AI Wallet Intelligence">
+    <meta name="description" content="AI-powered Solana wallet intelligence. Discover, track, and understand crypto wallets using plain English.">
+    <meta name="keywords" content="Solana, wallet, tracker, AI, crypto, blockchain, DeFi, whale, analytics">
+    <meta name="author" content="ClawCrypt">
+    <meta name="theme-color" content="#dc2626">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://clawcrypt.io/">
+    <meta property="og:title" content="ClawCrypt - AI Wallet Intelligence">
+    <meta property="og:description" content="AI-powered Solana wallet intelligence. Discover, track, and understand crypto wallets using plain English.">
+    <meta property="og:image" content="/assets/ChatGPT Image Jan 30, 2026, 09_52_01 AM.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://clawcrypt.io/">
+    <meta property="twitter:title" content="ClawCrypt - AI Wallet Intelligence">
+    <meta property="twitter:description" content="AI-powered Solana wallet intelligence. Discover, track, and understand crypto wallets using plain English.">
+    <meta property="twitter:image" content="/assets/ChatGPT Image Jan 30, 2026, 09_52_01 AM.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/src/css/main.css">
+    <link rel="stylesheet" href="/src/css/loading.css">
+    <link rel="stylesheet" href="/src/css/home.css">
+</head>
+<body>
+    <!-- Matrix Rain Background -->
+    <canvas id="matrix-canvas"></canvas>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loading-screen">
+        <div class="big-circle"></div>
+
+        <div class="percentage-wrapper">
+            <span class="percentage-number" id="percentage">0</span>
+            <span class="percentage-symbol">%</span>
+            
+            <div class="crab-wrapper">
+                <img src="/assets/ChatGPT Image Jan 30, 2026, 10_16_30 AM.png" 
+                     alt="ClawCrypt" 
+                     class="crab-image" 
+                     id="crab">
+            </div>
+        </div>
+
+        <div class="progress-line">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+
+        <div class="welcome-text" id="welcome-text">
+            <span>W</span><span>E</span><span>L</span><span>C</span><span>O</span><span>M</span><span>E</span>
+            <span>&nbsp;</span>
+            <span>T</span><span>O</span>
+            <span>&nbsp;</span>
+            <span>C</span><span>L</span><span>A</span><span>W</span><span>C</span><span>R</span><span>Y</span><span>P</span><span>T</span>
+        </div>
+    </div>
+
+    <!-- Home Page -->
+    <div class="home-page" id="home-page">
+        <div class="home-background"></div>
+
+        <!-- Floating Chat Bubbles - Left Side (fewer, better spaced) -->
+        <div class="chat-bubble left" style="top: 20%; left: 30px; animation-delay: 0s;">
+            <span class="bubble-icon">></span> Track this wallet
+        </div>
+        <div class="chat-bubble left" style="top: 45%; left: 50px; animation-delay: 1.5s;">
+            <span class="bubble-icon">></span> Who bought early?
+        </div>
+        <div class="chat-bubble left" style="top: 70%; left: 30px; animation-delay: 3s;">
+            <span class="bubble-icon">></span> Find diamond hands
+        </div>
+
+        <!-- Floating Chat Bubbles - Right Side -->
+        <div class="chat-bubble right" style="top: 22%; right: 30px; animation-delay: 0.5s;">
+            Show top holders<span class="bubble-icon">></span>
+        </div>
+        <div class="chat-bubble right" style="top: 48%; right: 50px; animation-delay: 2s;">
+            Is this bullish?<span class="bubble-icon">></span>
+        </div>
+        <div class="chat-bubble right" style="top: 72%; right: 30px; animation-delay: 2.5s;">
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+
+        <!-- Center Content -->
+        <div class="home-content">
+            <p class="subtitle">Solana Wallet Intelligence</p>
+            <h1 class="main-title">CLAWCRYPT</h1>
+            <p class="tagline">
+                A <span>chat-based AI</span> that lets anyone discover, track, and understand 
+                <span>crypto wallets</span> using plain English.
+            </p>
+            <button class="enter-btn">
+                Enter Chat
+                <span class="notification-badge">AI</span>
+            </button>
+        </div>
+
+        <!-- Feature Labels -->
+        <div class="feature-labels">
+            <div class="feature-label">Discovery</div>
+            <div class="feature-label">Analysis</div>
+            <div class="feature-label">Alerts</div>
+            <div class="feature-label">AI Chat</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="home-footer">
+            <div class="footer-links">
+                <a href="/pages/docs.html">Docs</a>
+                <a href="/pages/features.html">Features</a>
+                <a href="#">Community</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/js/app.js"></script>
+</body>
+</html>

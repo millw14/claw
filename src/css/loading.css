@@ -1,0 +1,198 @@
+/* ==================== LOADING SCREEN ==================== */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent; /* Transparent to show matrix behind */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 1s ease, visibility 1s ease;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Large Circle Background */
+.big-circle {
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+    pointer-events: none;
+}
+
+/* Percentage Container */
+.percentage-wrapper {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.percentage-number {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 200px;
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 3px #dc2626;
+    line-height: 0.85;
+    position: relative;
+}
+
+.percentage-symbol {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 50px;
+    font-weight: 700;
+    color: #dc2626;
+    margin-bottom: 40px;
+    margin-left: 5px;
+}
+
+/* Crab Animation */
+.crab-wrapper {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+}
+
+.crab-image {
+    width: 180px;
+    height: auto;
+    filter: drop-shadow(0 0 30px rgba(220, 38, 38, 0.6));
+    transition: filter 0.3s ease;
+}
+
+/* Progress Line */
+.progress-line {
+    width: 200px;
+    height: 2px;
+    background: rgba(220, 38, 38, 0.2);
+    margin-top: 60px;
+    position: relative;
+    z-index: 10;
+}
+
+.progress-fill {
+    height: 100%;
+    width: 0%;
+    background: #dc2626;
+    box-shadow: 0 0 10px #dc2626;
+    transition: width 0.1s ease;
+}
+
+/* Welcome Text */
+.welcome-text {
+    margin-top: 50px;
+    font-size: 24px;
+    letter-spacing: 12px;
+    color: #dc2626;
+    text-shadow: 0 0 20px rgba(220, 38, 38, 0.8);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.8s ease;
+    z-index: 10;
+    position: relative;
+}
+
+.welcome-text.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.welcome-text span {
+    display: inline-block;
+    animation: glitchLetter 3s infinite;
+}
+
+@keyframes glitchLetter {
+    0%, 95%, 100% { opacity: 1; transform: translateX(0); }
+    96% { opacity: 0.8; transform: translateX(-2px); color: #ff0000; }
+    97% { opacity: 0.8; transform: translateX(2px); color: #00ff00; }
+    98% { opacity: 1; transform: translateX(0); }
+}
+
+.welcome-text span:nth-child(3n) { animation-delay: 0.1s; }
+.welcome-text span:nth-child(3n+1) { animation-delay: 0.3s; }
+.welcome-text span:nth-child(3n+2) { animation-delay: 0.5s; }
+
+/* ==================== MOBILE RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+    .big-circle {
+        width: 400px;
+        height: 400px;
+    }
+
+    .percentage-number {
+        font-size: 120px;
+        -webkit-text-stroke: 2px #dc2626;
+    }
+
+    .percentage-symbol {
+        font-size: 30px;
+        margin-bottom: 25px;
+    }
+
+    .crab-wrapper {
+        bottom: -20px;
+    }
+
+    .crab-image {
+        width: 120px;
+    }
+
+    .progress-line {
+        width: 150px;
+        margin-top: 40px;
+    }
+
+    .welcome-text {
+        font-size: 14px;
+        letter-spacing: 6px;
+        margin-top: 35px;
+    }
+}
+
+@media (max-width: 480px) {
+    .big-circle {
+        width: 300px;
+        height: 300px;
+    }
+
+    .percentage-number {
+        font-size: 80px;
+        -webkit-text-stroke: 1.5px #dc2626;
+    }
+
+    .percentage-symbol {
+        font-size: 22px;
+        margin-bottom: 18px;
+    }
+
+    .crab-image {
+        width: 90px;
+    }
+
+    .progress-line {
+        width: 120px;
+        margin-top: 30px;
+    }
+
+    .welcome-text {
+        font-size: 10px;
+        letter-spacing: 4px;
+        margin-top: 25px;
+    }
+}
