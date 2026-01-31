@@ -7,6 +7,28 @@ export class HeliusService {
     constructor() {
         this.cache = new Map();
         this.cacheTimeout = 60000; // 1 minute
+        this.solPrice = null;
+        this.solPriceLastFetch = 0;
+    }
+
+    // Get real-time SOL price from CoinGecko
+    async getSolPrice() {
+        const now = Date.now();
+        // Cache for 60 seconds
+        if (this.solPrice && (now - this.solPriceLastFetch) < 60000) {
+            return this.solPrice;
+        }
+
+        try {
+            const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+            const data = await response.json();
+            this.solPrice = data.solana.usd;
+            this.solPriceLastFetch = now;
+            return this.solPrice;
+        } catch (error) {
+            console.error('Get SOL price error:', error);
+            return this.solPrice || 100; // Fallback
+        }
     }
 
     // Get wallet balances (SOL + tokens)
@@ -590,6 +612,327 @@ export class HeliusService {
         } catch (error) {
             console.error('Get wallet token PnL error:', error);
             throw error;
+        }
+    }
+
+    // ==================== 30-DAY PNL & COPY TRADE SIMULATOR ====================
+
+    // Get wallet's PnL for last N days
+    async getWalletPnLPeriod(walletAddress, days = 30) {
+        try {
+            const [transactions, solPrice] = await Promise.all([
+                this.getTransactions(walletAddress, 200), // More transactions for longer period
+                this.getSolPrice()
+            ]);
+            
+            const cutoffTime = Date.now() / 1000 - (days * 24 * 60 * 60);
+            const periodTxs = transactions.filter(tx => tx.timestamp >= cutoffTime);
+            
+            let totalBuys = 0;
+            let totalSells = 0;
+            let buyValue = 0;
+            let sellValue = 0;
+            let trades = [];
+            let dailyPnL = {};
+            let biggestWin = { value: 0, token: null };
+            let biggestLoss = { value: 0, token: null };
+
+            // Track per-token performance
+            const tokenPerformance = new Map();
+
+            for (const tx of periodTxs) {
+                if (!tx.type?.toLowerCase().includes('swap') && !tx.description?.toLowerCase().includes('swap')) {
+                    continue;
+                }
+
+                const tokenTransfers = tx.tokenTransfers || [];
+                const nativeTransfers = tx.nativeTransfers || [];
+                
+                const solIn = nativeTransfers
+                    .filter(t => t.toUserAccount === walletAddress)
+                    .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
+                
+                const solOut = nativeTransfers
+                    .filter(t => t.fromUserAccount === walletAddress)
+                    .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
+
+                // Get the token involved
+                const tokenMint = tokenTransfers[0]?.mint || 'unknown';
+                const tokenSymbol = tokenTransfers[0]?.symbol || tokenMint.slice(0, 8);
+
+                if (!tokenPerformance.has(tokenMint)) {
+                    tokenPerformance.set(tokenMint, { symbol: tokenSymbol, bought: 0, sold: 0, pnl: 0 });
+                }
+                const tokenData = tokenPerformance.get(tokenMint);
+
+                const date = new Date(tx.timestamp * 1000).toISOString().split('T')[0];
+                if (!dailyPnL[date]) dailyPnL[date] = 0;
+
+                if (solOut > solIn) {
+                    // Buy (spent SOL)
+                    totalBuys++;
+                    const spent = solOut - solIn;
+                    buyValue += spent;
+                    tokenData.bought += spent;
+                    trades.push({ 
+                        type: 'buy', 
+                        sol: spent, 
+                        usd: spent * solPrice,
+                        token: tokenSymbol,
+                        timestamp: tx.timestamp,
+                        date
+                    });
+                } else if (solIn > solOut) {
+                    // Sell (received SOL)
+                    totalSells++;
+                    const received = solIn - solOut;
+                    sellValue += received;
+                    tokenData.sold += received;
+                    
+                    // Calculate trade PnL
+                    const tradePnL = received - (tokenData.bought / Math.max(totalBuys, 1));
+                    tokenData.pnl += tradePnL;
+                    dailyPnL[date] += tradePnL;
+                    
+                    if (tradePnL > biggestWin.value) {
+                        biggestWin = { value: tradePnL, token: tokenSymbol };
+                    }
+                    if (tradePnL < biggestLoss.value) {
+                        biggestLoss = { value: tradePnL, token: tokenSymbol };
+                    }
+                    
+                    trades.push({ 
+                        type: 'sell', 
+                        sol: received, 
+                        usd: received * solPrice,
+                        token: tokenSymbol,
+                        pnl: tradePnL,
+                        timestamp: tx.timestamp,
+                        date
+                    });
+                }
+            }
+
+            const realizedPnL = sellValue - buyValue;
+            const roi = buyValue > 0 ? ((sellValue - buyValue) / buyValue * 100) : 0;
+
+            // Convert token performance to array and sort by PnL
+            const topTokens = Array.from(tokenPerformance.entries())
+                .map(([mint, data]) => ({ mint, ...data }))
+                .filter(t => t.sold > 0 || t.bought > 0)
+                .sort((a, b) => b.pnl - a.pnl)
+                .slice(0, 5);
+
+            return {
+                address: walletAddress,
+                period: `${days} days`,
+                solPrice,
+                summary: {
+                    totalTrades: totalBuys + totalSells,
+                    totalBuys,
+                    totalSells,
+                    buyValueSOL: buyValue.toFixed(4),
+                    sellValueSOL: sellValue.toFixed(4),
+                    buyValueUSD: (buyValue * solPrice).toFixed(2),
+                    sellValueUSD: (sellValue * solPrice).toFixed(2),
+                    realizedPnLSOL: realizedPnL.toFixed(4),
+                    realizedPnLUSD: (realizedPnL * solPrice).toFixed(2),
+                    roi: roi.toFixed(2)
+                },
+                biggestWin: {
+                    sol: biggestWin.value.toFixed(4),
+                    usd: (biggestWin.value * solPrice).toFixed(2),
+                    token: biggestWin.token
+                },
+                biggestLoss: {
+                    sol: biggestLoss.value.toFixed(4),
+                    usd: (biggestLoss.value * solPrice).toFixed(2),
+                    token: biggestLoss.token
+                },
+                topTokens,
+                dailyPnL: Object.entries(dailyPnL).map(([date, pnl]) => ({ 
+                    date, 
+                    pnlSOL: pnl.toFixed(4),
+                    pnlUSD: (pnl * solPrice).toFixed(2)
+                })).slice(-14), // Last 14 days
+                recentTrades: trades.slice(0, 15)
+            };
+        } catch (error) {
+            console.error('Get wallet PnL period error:', error);
+            throw error;
+        }
+    }
+
+    // Copy Trade Simulator - "What if I invested X SOL copying this wallet?"
+    async simulateCopyTrade(walletAddress, investmentSOL = 1, days = 30) {
+        try {
+            const [transactions, solPrice] = await Promise.all([
+                this.getTransactions(walletAddress, 200),
+                this.getSolPrice()
+            ]);
+            
+            const cutoffTime = Date.now() / 1000 - (days * 24 * 60 * 60);
+            const periodTxs = transactions.filter(tx => tx.timestamp >= cutoffTime);
+            
+            // Simulate copy trading with proportional position sizing
+            let portfolio = investmentSOL;
+            let portfolioHistory = [{ date: new Date(cutoffTime * 1000).toISOString().split('T')[0], value: investmentSOL }];
+            let tradesCopied = [];
+            let wins = 0;
+            let losses = 0;
+            let totalWinAmount = 0;
+            let totalLossAmount = 0;
+
+            // Track original wallet's buy/sell ratios to copy proportionally
+            const originalTrades = [];
+
+            for (const tx of periodTxs.reverse()) { // Process oldest first
+                if (!tx.type?.toLowerCase().includes('swap') && !tx.description?.toLowerCase().includes('swap')) {
+                    continue;
+                }
+
+                const nativeTransfers = tx.nativeTransfers || [];
+                const tokenTransfers = tx.tokenTransfers || [];
+                
+                const solIn = nativeTransfers
+                    .filter(t => t.toUserAccount === walletAddress)
+                    .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
+                
+                const solOut = nativeTransfers
+                    .filter(t => t.fromUserAccount === walletAddress)
+                    .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
+
+                const token = tokenTransfers[0]?.symbol || 'TOKEN';
+                const date = new Date(tx.timestamp * 1000).toISOString().split('T')[0];
+
+                if (solOut > solIn) {
+                    // Original wallet bought - we copy with portion of our portfolio
+                    const originalSpent = solOut - solIn;
+                    const copySpent = Math.min(portfolio * 0.1, portfolio); // Max 10% per trade
+                    
+                    if (copySpent > 0.001) {
+                        portfolio -= copySpent;
+                        originalTrades.push({ 
+                            type: 'buy', 
+                            token, 
+                            originalSpent, 
+                            copySpent,
+                            timestamp: tx.timestamp 
+                        });
+                        
+                        tradesCopied.push({
+                            type: 'BUY',
+                            token,
+                            spent: copySpent.toFixed(4),
+                            date,
+                            portfolioAfter: portfolio.toFixed(4)
+                        });
+                    }
+                } else if (solIn > solOut) {
+                    // Original wallet sold - calculate our proportional return
+                    const originalReceived = solIn - solOut;
+                    
+                    // Find matching buy
+                    const matchingBuy = originalTrades.find(t => t.type === 'buy' && t.token === token);
+                    
+                    if (matchingBuy) {
+                        // Calculate ROI based on original trade
+                        const originalROI = matchingBuy.originalSpent > 0 
+                            ? (originalReceived / matchingBuy.originalSpent) 
+                            : 1;
+                        
+                        const copyReceived = matchingBuy.copySpent * originalROI;
+                        const tradePnL = copyReceived - matchingBuy.copySpent;
+                        
+                        portfolio += copyReceived;
+                        
+                        if (tradePnL > 0) {
+                            wins++;
+                            totalWinAmount += tradePnL;
+                        } else {
+                            losses++;
+                            totalLossAmount += Math.abs(tradePnL);
+                        }
+                        
+                        tradesCopied.push({
+                            type: 'SELL',
+                            token,
+                            received: copyReceived.toFixed(4),
+                            pnl: tradePnL.toFixed(4),
+                            roi: ((originalROI - 1) * 100).toFixed(1) + '%',
+                            date,
+                            portfolioAfter: portfolio.toFixed(4)
+                        });
+                        
+                        // Remove used buy
+                        const idx = originalTrades.indexOf(matchingBuy);
+                        if (idx > -1) originalTrades.splice(idx, 1);
+                    }
+                }
+
+                portfolioHistory.push({ date, value: portfolio });
+            }
+
+            const finalPnL = portfolio - investmentSOL;
+            const totalROI = ((portfolio - investmentSOL) / investmentSOL) * 100;
+            const winrate = (wins + losses) > 0 ? (wins / (wins + losses)) * 100 : 0;
+
+            // Get unique portfolio history dates
+            const uniqueHistory = [];
+            const seenDates = new Set();
+            for (const h of portfolioHistory) {
+                if (!seenDates.has(h.date)) {
+                    seenDates.add(h.date);
+                    uniqueHistory.push(h);
+                }
+            }
+
+            return {
+                wallet: walletAddress,
+                simulation: {
+                    initialInvestment: investmentSOL,
+                    initialInvestmentUSD: (investmentSOL * solPrice).toFixed(2),
+                    period: `${days} days`,
+                    solPrice
+                },
+                results: {
+                    finalPortfolioSOL: portfolio.toFixed(4),
+                    finalPortfolioUSD: (portfolio * solPrice).toFixed(2),
+                    pnlSOL: finalPnL.toFixed(4),
+                    pnlUSD: (finalPnL * solPrice).toFixed(2),
+                    totalROI: totalROI.toFixed(2),
+                    tradesCopied: tradesCopied.length,
+                    wins,
+                    losses,
+                    winrate: winrate.toFixed(1),
+                    avgWin: wins > 0 ? (totalWinAmount / wins).toFixed(4) : '0',
+                    avgLoss: losses > 0 ? (totalLossAmount / losses).toFixed(4) : '0'
+                },
+                portfolioHistory: uniqueHistory.slice(-30),
+                trades: tradesCopied.slice(-20),
+                verdict: this.getCopyTradeVerdict(totalROI, winrate, tradesCopied.length)
+            };
+        } catch (error) {
+            console.error('Simulate copy trade error:', error);
+            throw error;
+        }
+    }
+
+    getCopyTradeVerdict(roi, winrate, trades) {
+        if (trades < 3) {
+            return { rating: '⚠️', text: 'Not enough trades to evaluate', recommendation: 'Wait for more data' };
+        }
+        
+        if (roi > 100 && winrate > 60) {
+            return { rating: '🔥', text: 'Exceptional Trader', recommendation: 'High potential copy target' };
+        } else if (roi > 50 && winrate > 50) {
+            return { rating: '✅', text: 'Strong Performer', recommendation: 'Good copy trading candidate' };
+        } else if (roi > 0 && winrate > 40) {
+            return { rating: '👍', text: 'Profitable Trader', recommendation: 'Consider with caution' };
+        } else if (roi > -20) {
+            return { rating: '⚡', text: 'Mixed Results', recommendation: 'Higher risk, needs more analysis' };
+        } else {
+            return { rating: '❌', text: 'Underperforming', recommendation: 'Not recommended for copy trading' };
         }
     }
 }

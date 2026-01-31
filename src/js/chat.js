@@ -163,6 +163,28 @@ What would you like to know?`);
                 );
                 break;
 
+            case 'GET_WALLET_PNL_30D':
+            case 'GET_WALLET_PNL_7D':
+                const periodDays = response.command === 'GET_WALLET_PNL_7D' ? 7 : 
+                                   (response.params?.days || 30);
+                await this.handleWalletPnLPeriod(
+                    response.params?.address || this.extractAddress(originalMessage),
+                    periodDays
+                );
+                break;
+
+            case 'SIMULATE_COPY_TRADE':
+                await this.handleCopyTradeSimulation(
+                    response.params?.address || this.extractAddress(originalMessage),
+                    response.params?.amount || this.extractAmount(originalMessage) || 1,
+                    response.params?.days || 30
+                );
+                break;
+
+            case 'GET_SOL_PRICE':
+                await this.handleSolPrice();
+                break;
+
             case 'ERROR':
                 this.addMessage('assistant', `I had trouble processing that: ${response.error}`, 'error');
                 break;
@@ -383,6 +405,55 @@ Example: "How much did [wallet] make on [token]"`);
         } catch (error) {
             this.addMessage('assistant', `Couldn't analyze: ${error.message}`, 'error');
         }
+    }
+
+    // ==================== 30-DAY PNL & COPY TRADE HANDLERS ====================
+
+    async handleWalletPnLPeriod(address, days = 30) {
+        if (!address || !this.helius.isValidAddress(address)) {
+            this.addMessage('assistant', 'Please provide a valid wallet address to analyze.');
+            return;
+        }
+
+        this.addMessage('assistant', `📊 Calculating ${days}-day PnL for \`${this.truncateAddress(address)}\`... This may take a moment.`);
+
+        try {
+            const pnl = await this.helius.getWalletPnLPeriod(address, days);
+            this.displayWalletPnLPeriod(pnl);
+        } catch (error) {
+            this.addMessage('assistant', `Couldn't calculate ${days}-day PnL: ${error.message}`, 'error');
+        }
+    }
+
+    async handleCopyTradeSimulation(address, amount = 1, days = 30) {
+        if (!address || !this.helius.isValidAddress(address)) {
+            this.addMessage('assistant', 'Please provide a valid wallet address to simulate copy trading.');
+            return;
+        }
+
+        this.addMessage('assistant', `🎮 Simulating what would happen if you copy traded \`${this.truncateAddress(address)}\` with **${amount} SOL** over ${days} days...`);
+
+        try {
+            const simulation = await this.helius.simulateCopyTrade(address, amount, days);
+            this.displayCopyTradeSimulation(simulation);
+        } catch (error) {
+            this.addMessage('assistant', `Couldn't simulate copy trade: ${error.message}`, 'error');
+        }
+    }
+
+    async handleSolPrice() {
+        try {
+            const price = await this.helius.getSolPrice();
+            this.addMessage('assistant', `**Current SOL Price:** $${price.toFixed(2)} USD`);
+        } catch (error) {
+            this.addMessage('assistant', `Couldn't fetch SOL price: ${error.message}`, 'error');
+        }
+    }
+
+    // Extract amount from text (e.g., "1 sol", "5 SOL", "10")
+    extractAmount(text) {
+        const match = text.match(/(\d+(?:\.\d+)?)\s*(?:sol|SOL)?/);
+        return match ? parseFloat(match[1]) : null;
     }
 
     // ==================== NEW DISPLAY METHODS ====================
@@ -647,6 +718,214 @@ Example: "How much did [wallet] make on [token]"`);
             <span class="price-label">Avg Sell Price</span>
             <span class="price-val">${pnl.avgSellPrice} SOL</span>
         </div>
+    </div>
+</div>`;
+
+        this.addMessage('assistant', html, 'html');
+    }
+
+    // ==================== 30-DAY PNL & COPY TRADE DISPLAYS ====================
+
+    displayWalletPnLPeriod(data) {
+        const isProfitable = parseFloat(data.summary.realizedPnLSOL) > 0;
+        const roiClass = parseFloat(data.summary.roi) > 0 ? 'positive' : parseFloat(data.summary.roi) < 0 ? 'negative' : '';
+        
+        const html = `
+<div class="period-pnl-card">
+    <div class="ppnl-header">
+        <h4>📊 ${data.period} Performance</h4>
+        <div class="ppnl-meta">
+            <span class="wallet-addr">${this.truncateAddress(data.address)}</span>
+            <span class="sol-price">SOL: $${data.solPrice.toFixed(2)}</span>
+        </div>
+    </div>
+    
+    <div class="ppnl-main ${isProfitable ? 'profit' : 'loss'}">
+        <div class="ppnl-sol">${isProfitable ? '+' : ''}${data.summary.realizedPnLSOL} SOL</div>
+        <div class="ppnl-usd">${isProfitable ? '+' : ''}$${data.summary.realizedPnLUSD}</div>
+        <div class="ppnl-roi ${roiClass}">${data.summary.roi}% ROI</div>
+    </div>
+    
+    <div class="ppnl-stats">
+        <div class="stat-box">
+            <span class="stat-val">${data.summary.totalTrades}</span>
+            <span class="stat-label">Total Trades</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-val">${data.summary.totalBuys}</span>
+            <span class="stat-label">Buys</span>
+        </div>
+        <div class="stat-box">
+            <span class="stat-val">${data.summary.totalSells}</span>
+            <span class="stat-label">Sells</span>
+        </div>
+    </div>
+    
+    <div class="ppnl-flow">
+        <div class="flow-box spent">
+            <span class="flow-label">Total Spent</span>
+            <span class="flow-sol">${data.summary.buyValueSOL} SOL</span>
+            <span class="flow-usd">$${data.summary.buyValueUSD}</span>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-box received">
+            <span class="flow-label">Total Received</span>
+            <span class="flow-sol">${data.summary.sellValueSOL} SOL</span>
+            <span class="flow-usd">$${data.summary.sellValueUSD}</span>
+        </div>
+    </div>
+    
+    <div class="ppnl-highlights">
+        <div class="highlight-item best">
+            <span class="hl-icon">🏆</span>
+            <div class="hl-info">
+                <span class="hl-label">Biggest Win</span>
+                <span class="hl-val">+${data.biggestWin.sol} SOL ($${data.biggestWin.usd})</span>
+                ${data.biggestWin.token ? `<span class="hl-token">${data.biggestWin.token}</span>` : ''}
+            </div>
+        </div>
+        <div class="highlight-item worst">
+            <span class="hl-icon">📉</span>
+            <div class="hl-info">
+                <span class="hl-label">Biggest Loss</span>
+                <span class="hl-val">${data.biggestLoss.sol} SOL ($${data.biggestLoss.usd})</span>
+                ${data.biggestLoss.token ? `<span class="hl-token">${data.biggestLoss.token}</span>` : ''}
+            </div>
+        </div>
+    </div>
+    
+    ${data.topTokens.length > 0 ? `
+    <div class="ppnl-tokens">
+        <h5>Top Performing Tokens</h5>
+        <div class="token-list">
+            ${data.topTokens.slice(0, 5).map(t => `
+                <div class="token-row ${t.pnl > 0 ? 'profit' : 'loss'}">
+                    <span class="token-sym">${t.symbol}</span>
+                    <span class="token-pnl">${t.pnl > 0 ? '+' : ''}${t.pnl.toFixed(4)} SOL</span>
+                </div>
+            `).join('')}
+        </div>
+    </div>
+    ` : ''}
+    
+    <div class="ppnl-actions">
+        <button class="action-btn" onclick="document.getElementById('chat-input').value='What if I copy traded ${data.address} with 1 SOL?'; document.getElementById('send-btn').click();">
+            🎮 Simulate Copy Trade
+        </button>
+        <button class="action-btn" onclick="document.getElementById('chat-input').value='What is the winrate for ${data.address}?'; document.getElementById('send-btn').click();">
+            📊 View Winrate
+        </button>
+    </div>
+</div>`;
+
+        this.addMessage('assistant', html, 'html');
+    }
+
+    displayCopyTradeSimulation(sim) {
+        const isProfitable = parseFloat(sim.results.pnlSOL) > 0;
+        const verdictClass = sim.verdict.rating.includes('🔥') || sim.verdict.rating.includes('✅') ? 'good' : 
+                            sim.verdict.rating.includes('❌') ? 'bad' : 'neutral';
+        
+        const html = `
+<div class="copy-trade-card">
+    <div class="ct-header">
+        <h4>🎮 Copy Trade Simulation</h4>
+        <span class="wallet-addr">${this.truncateAddress(sim.wallet)}</span>
+    </div>
+    
+    <div class="ct-setup">
+        <div class="setup-item">
+            <span class="setup-label">Initial Investment</span>
+            <span class="setup-val">${sim.simulation.initialInvestment} SOL ($${sim.simulation.initialInvestmentUSD})</span>
+        </div>
+        <div class="setup-item">
+            <span class="setup-label">Period</span>
+            <span class="setup-val">${sim.simulation.period}</span>
+        </div>
+        <div class="setup-item">
+            <span class="setup-label">SOL Price</span>
+            <span class="setup-val">$${sim.simulation.solPrice.toFixed(2)}</span>
+        </div>
+    </div>
+    
+    <div class="ct-result ${isProfitable ? 'profit' : 'loss'}">
+        <div class="result-main">
+            <div class="result-final">
+                <span class="final-label">Final Portfolio</span>
+                <span class="final-sol">${sim.results.finalPortfolioSOL} SOL</span>
+                <span class="final-usd">$${sim.results.finalPortfolioUSD}</span>
+            </div>
+            <div class="result-pnl">
+                <span class="pnl-label">Total P&L</span>
+                <span class="pnl-sol">${isProfitable ? '+' : ''}${sim.results.pnlSOL} SOL</span>
+                <span class="pnl-usd">${isProfitable ? '+' : ''}$${sim.results.pnlUSD}</span>
+            </div>
+        </div>
+        <div class="result-roi">${sim.results.totalROI}% ROI</div>
+    </div>
+    
+    <div class="ct-stats">
+        <div class="stat-item">
+            <span class="stat-num">${sim.results.tradesCopied}</span>
+            <span class="stat-label">Trades Copied</span>
+        </div>
+        <div class="stat-item win">
+            <span class="stat-num">${sim.results.wins}</span>
+            <span class="stat-label">Wins</span>
+        </div>
+        <div class="stat-item loss">
+            <span class="stat-num">${sim.results.losses}</span>
+            <span class="stat-label">Losses</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-num">${sim.results.winrate}%</span>
+            <span class="stat-label">Winrate</span>
+        </div>
+    </div>
+    
+    <div class="ct-avgs">
+        <div class="avg-box">
+            <span class="avg-label">Avg Win</span>
+            <span class="avg-val positive">+${sim.results.avgWin} SOL</span>
+        </div>
+        <div class="avg-box">
+            <span class="avg-label">Avg Loss</span>
+            <span class="avg-val negative">-${sim.results.avgLoss} SOL</span>
+        </div>
+    </div>
+    
+    <div class="ct-verdict ${verdictClass}">
+        <span class="verdict-rating">${sim.verdict.rating}</span>
+        <div class="verdict-info">
+            <span class="verdict-text">${sim.verdict.text}</span>
+            <span class="verdict-rec">${sim.verdict.recommendation}</span>
+        </div>
+    </div>
+    
+    ${sim.trades.length > 0 ? `
+    <div class="ct-trades">
+        <h5>Recent Copied Trades</h5>
+        <div class="trades-list">
+            ${sim.trades.slice(-8).reverse().map(t => `
+                <div class="trade-row ${t.type.toLowerCase()}">
+                    <span class="trade-type">${t.type}</span>
+                    <span class="trade-token">${t.token}</span>
+                    <span class="trade-amount">${t.type === 'BUY' ? `-${t.spent}` : `+${t.received}`} SOL</span>
+                    ${t.pnl ? `<span class="trade-pnl ${parseFloat(t.pnl) > 0 ? 'profit' : 'loss'}">${t.pnl} SOL</span>` : ''}
+                    <span class="trade-date">${t.date}</span>
+                </div>
+            `).join('')}
+        </div>
+    </div>
+    ` : ''}
+    
+    <div class="ct-actions">
+        <button class="action-btn" onclick="document.getElementById('chat-input').value='What if I copy traded ${sim.wallet} with 5 SOL?'; document.getElementById('send-btn').click();">
+            Try with 5 SOL
+        </button>
+        <button class="action-btn" onclick="document.getElementById('chat-input').value='Show 30 day PnL for ${sim.wallet}'; document.getElementById('send-btn').click();">
+            View Full PnL
+        </button>
     </div>
 </div>`;
 

@@ -23,29 +23,46 @@ QUERY TYPES & COMMANDS:
    - "winrate/win rate/success rate" → GET_WALLET_WINRATE
    - "best trade/biggest profit" → GET_BEST_TRADE
    - "ROI/returns" → GET_WALLET_PNL
+   - "last 30 days/30d/monthly pnl" → GET_WALLET_PNL_30D
+   - "last 7 days/7d/weekly pnl" → GET_WALLET_PNL_7D
 
-3. TOKEN ANALYSIS (needs token mint address):
+3. COPY TRADE SIMULATION (needs wallet address + optional investment amount):
+   - "copy trade/what if I copied/simulate copying" → SIMULATE_COPY_TRADE
+   - "if I invested X SOL copying them" → SIMULATE_COPY_TRADE with amount
+   - "copy traded with 1 sol/5 sol/etc" → SIMULATE_COPY_TRADE
+   - Extract investment amount if mentioned (default 1 SOL)
+   - Extract days if mentioned (default 30 days)
+
+4. TOKEN ANALYSIS (needs token mint address):
    - "top holders/biggest holders/whales" → GET_TOP_HOLDERS
    - "best trader/most profitable/highest profit in this coin" → GET_TOP_TRADERS
    - "early buyers/first buyers/OG holders" → GET_EARLY_BUYERS
    - "who bought first and still holding" → GET_DIAMOND_HANDS
 
-4. WALLET + TOKEN COMBO (needs both):
+5. WALLET + TOKEN COMBO (needs both):
    - "how much did [wallet] make on [token]" → GET_WALLET_TOKEN_PNL
    - "did [wallet] trade [token]" → GET_WALLET_TOKEN_HISTORY
 
+6. PRICE QUERIES:
+   - "sol price/solana price" → GET_SOL_PRICE
+
 SYNONYMS:
-- "best traders" / "most profitable" / "top earners" = GET_TOP_TRADERS (ranked by realized profit + ROI)
+- "best traders" / "most profitable" / "top earners" = GET_TOP_TRADERS
 - "diamond hands" / "still holding" / "early + holding" = GET_DIAMOND_HANDS
 - "winrate" / "win ratio" / "success" = GET_WALLET_WINRATE
 - "pnl" / "profit" / "made" / "earned" = GET_WALLET_PNL or GET_WALLET_TOKEN_PNL
+- "30 days" / "30d" / "monthly" / "last month" = 30 day period
+- "7 days" / "7d" / "weekly" / "last week" = 7 day period
+- "copy trade" / "copy trading" / "what if I copied" / "simulate" = SIMULATE_COPY_TRADE
 
 RESPONSE FORMAT:
 {
     "command": "COMMAND_NAME",
     "params": { 
         "address": "wallet_address_if_applicable",
-        "token": "token_mint_if_applicable"
+        "token": "token_mint_if_applicable",
+        "days": number_of_days_if_specified,
+        "amount": investment_amount_in_sol_if_specified
     },
     "explanation": "Brief description"
 }
@@ -57,6 +74,7 @@ CONTEXT CLUES:
 - "coin/token/holders" + address = token mint address
 - "wallet/portfolio/trader" + address = wallet address
 - If BOTH wallet and token mentioned, extract both
+- Numbers like "1 sol", "5 SOL", "10" before "copy" = investment amount
 - "in this coin" = token context, "this wallet" = wallet context`;
     }
 
