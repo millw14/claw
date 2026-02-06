@@ -8,7 +8,7 @@ export class ChatController {
         this.helius = new HeliusService();
         this.conversationHistory = [];
         this.isProcessing = false;
-        
+
         // DOM elements
         this.chatMessages = null;
         this.chatInput = null;
@@ -52,26 +52,26 @@ What would you like to know?`);
 
         // Clear input
         this.chatInput.value = '';
-        
+
         // Add user message
         this.addMessage('user', message);
-        
+
         // Show typing indicator
         this.setProcessing(true);
 
         try {
             // Process with Groq
             const aiResponse = await this.groq.processQuery(message, this.conversationHistory);
-            
+
             // Handle the command
             await this.handleCommand(aiResponse, message);
-            
+
             // Update conversation history
             this.conversationHistory.push(
                 { role: 'user', content: message },
                 { role: 'assistant', content: JSON.stringify(aiResponse) }
             );
-            
+
             // Keep history manageable
             if (this.conversationHistory.length > 20) {
                 this.conversationHistory = this.conversationHistory.slice(-20);
@@ -112,8 +112,8 @@ What would you like to know?`);
 
             case 'GET_TOP_HOLDERS':
                 await this.handleTopHolders(
-                    response.params?.token || 
-                    response.params?.mint || 
+                    response.params?.token ||
+                    response.params?.mint ||
                     response.params?.address ||
                     this.extractAddress(originalMessage)
                 );
@@ -134,7 +134,7 @@ What would you like to know?`);
 
             case 'GET_TOP_TRADERS':
                 await this.handleTopTraders(
-                    response.params?.token || 
+                    response.params?.token ||
                     response.params?.address ||
                     this.extractAddress(originalMessage)
                 );
@@ -165,8 +165,8 @@ What would you like to know?`);
 
             case 'GET_WALLET_PNL_30D':
             case 'GET_WALLET_PNL_7D':
-                const periodDays = response.command === 'GET_WALLET_PNL_7D' ? 7 : 
-                                   (response.params?.days || 30);
+                const periodDays = response.command === 'GET_WALLET_PNL_7D' ? 7 :
+                    (response.params?.days || 30);
                 await this.handleWalletPnLPeriod(
                     response.params?.address || this.extractAddress(originalMessage),
                     periodDays
@@ -183,6 +183,13 @@ What would you like to know?`);
 
             case 'GET_SOL_PRICE':
                 await this.handleSolPrice();
+                break;
+
+            case 'FIND_WALLET_BY_TOKENS':
+                await this.handleFindWalletsByTokens(
+                    response.params?.tokens || this.extractAllAddresses(originalMessage),
+                    response.params?.maxBalance || this.extractMaxBalance(originalMessage)
+                );
                 break;
 
             case 'ERROR':
@@ -289,12 +296,12 @@ Please paste the full token address.`);
 
         try {
             const holders = await this.helius.getTokenHolders(tokenMint);
-            
+
             if (!holders || holders.length === 0) {
                 this.addMessage('assistant', `No holders found for this token. It might be a new token or the address might be incorrect.`);
                 return;
             }
-            
+
             this.displayTopHolders(holders, tokenMint);
         } catch (error) {
             this.addMessage('assistant', `Couldn't fetch top holders: ${error.message}
@@ -383,7 +390,7 @@ Paste the token's contract address and I'll show you:
     async handleWalletTokenPnL(walletAddress, tokenMint, originalMessage) {
         // Try to extract both addresses from the message if not provided
         const addresses = originalMessage.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/g) || [];
-        
+
         if (!walletAddress && addresses.length >= 1) walletAddress = addresses[0];
         if (!tokenMint && addresses.length >= 2) tokenMint = addresses[1];
 
@@ -450,6 +457,116 @@ Example: "How much did [wallet] make on [token]"`);
         }
     }
 
+    // ==================== WALLET SEARCH BY TOKENS ====================
+
+    async handleFindWalletsByTokens(tokens, maxBalance) {
+        if (!tokens || tokens.length === 0) {
+            this.addMessage('assistant', `I need at least one token address to search for wallets.
+
+Please provide the token mint address(es) you want to search for. For example:
+"Find wallets that hold CGfREvjxn...pump and FxkoBVZ5i...pump with less than 2 SOL"`);
+            return;
+        }
+
+        // Validate all addresses
+        const invalidTokens = tokens.filter(t => !this.helius.isValidAddress(t));
+        if (invalidTokens.length > 0) {
+            this.addMessage('assistant', `Some token addresses don't look valid. Please check:
+${invalidTokens.map(t => `• \`${this.truncateAddress(t)}\``).join('\n')}`);
+            return;
+        }
+
+        const balanceText = maxBalance !== null ? ` with ≤ ${maxBalance} SOL` : '';
+        this.addMessage('assistant', `🔍 Searching for wallets that hold ${tokens.length} token(s)${balanceText}...
+
+${tokens.map(t => `• \`${this.truncateAddress(t)}\``).join('\n')}
+
+This may take a moment as I analyze holders across all tokens.`);
+
+        try {
+            const results = await this.helius.findWalletsByTokens(tokens, maxBalance);
+            this.displayWalletSearchResults(results);
+        } catch (error) {
+            this.addMessage('assistant', `Couldn't search wallets: ${error.message}`, 'error');
+        }
+    }
+
+    displayWalletSearchResults(results) {
+        if (!results.wallets || results.wallets.length === 0) {
+            const balanceText = results.maxSolBalance !== null ? ` with ≤ ${results.maxSolBalance} SOL` : '';
+            this.addMessage('assistant', `No wallets found that hold all ${results.tokens.length} tokens${balanceText}.
+
+This could mean:
+• No wallets currently hold all the specified tokens
+• The balance filter is too restrictive
+• Try searching with fewer tokens or a higher balance limit`);
+            return;
+        }
+
+        const balanceText = results.maxSolBalance !== null ? ` (≤ ${results.maxSolBalance} SOL)` : '';
+
+        const html = `
+<div class="wallet-search-card">
+    <div class="ws-header">
+        <h4>🔍 Wallet Search Results</h4>
+        <div class="ws-meta">
+            <span class="ws-count">${results.filtered} wallets found${balanceText}</span>
+            <span class="ws-total">of ${results.totalFound} common holders</span>
+        </div>
+    </div>
+    
+    <div class="ws-tokens">
+        <span class="ws-label">Tokens searched:</span>
+        <div class="ws-token-list">
+            ${results.tokens.map(t => `<span class="ws-token-badge">${this.truncateAddress(t)}</span>`).join('')}
+        </div>
+    </div>
+    
+    <div class="ws-wallets">
+        ${results.wallets.map((w, i) => `
+            <div class="ws-wallet-item">
+                <div class="ws-wallet-rank">#${i + 1}</div>
+                <div class="ws-wallet-info">
+                    <span class="ws-wallet-addr" onclick="navigator.clipboard.writeText('${w.address}')" title="Click to copy">${this.truncateAddress(w.address)}</span>
+                    <div class="ws-wallet-holdings">
+                        ${w.tokenHoldings.map(h => `
+                            <span class="ws-holding">${this.formatAmount(h.amount)} ${h.symbol}</span>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="ws-wallet-sol">
+                    <span class="ws-sol-balance">${w.solBalance} SOL</span>
+                </div>
+                <div class="ws-wallet-actions">
+                    <button class="ws-action-btn" onclick="document.getElementById('chat-input').value='Analyze wallet ${w.address}'; document.getElementById('send-btn').click();">
+                        Analyze
+                    </button>
+                </div>
+            </div>
+        `).join('')}
+    </div>
+    
+    <div class="ws-footer">
+        <p class="ws-tip">💡 Click "Analyze" to get detailed insights on any wallet</p>
+    </div>
+</div>`;
+
+        this.addMessage('assistant', html, 'html');
+    }
+
+    // Extract all Solana addresses from text (for multi-token queries)
+    extractAllAddresses(text) {
+        const matches = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/g) || [];
+        // Remove duplicates
+        return [...new Set(matches)];
+    }
+
+    // Extract max balance from text (e.g., "less than 2 sol", "under 5 SOL")
+    extractMaxBalance(text) {
+        const match = text.match(/(?:less than|under|below|<|<=)\s*(\d+(?:\.\d+)?)\s*(?:sol|SOL)/i);
+        return match ? parseFloat(match[1]) : null;
+    }
+
     // Extract amount from text (e.g., "1 sol", "5 SOL", "10")
     extractAmount(text) {
         const match = text.match(/(\d+(?:\.\d+)?)\s*(?:sol|SOL)?/);
@@ -461,7 +578,7 @@ Example: "How much did [wallet] make on [token]"`);
     displayWalletPnL(pnl) {
         const isProfitable = parseFloat(pnl.realizedPnL) > 0;
         const roiClass = parseFloat(pnl.roi) > 0 ? 'positive' : parseFloat(pnl.roi) < 0 ? 'negative' : '';
-        
+
         const html = `
 <div class="pnl-card">
     <div class="pnl-header">
@@ -517,7 +634,7 @@ Example: "How much did [wallet] make on [token]"`);
 
     displayWalletWinrate(data) {
         const winrateClass = parseFloat(data.winrate) >= 50 ? 'good' : 'bad';
-        
+
         const html = `
 <div class="winrate-card">
     <div class="winrate-header">
@@ -625,14 +742,14 @@ Example: "How much did [wallet] make on [token]"`);
 
     displayEarlyBuyers(buyers, tokenMint, diamondHandsOnly) {
         if (!buyers || buyers.length === 0) {
-            this.addMessage('assistant', diamondHandsOnly 
+            this.addMessage('assistant', diamondHandsOnly
                 ? 'No diamond hands found - everyone who bought early has sold!'
                 : 'No early buyer data found for this token.');
             return;
         }
 
         const title = diamondHandsOnly ? '💎 Diamond Hands' : '🕐 Early Buyers';
-        
+
         const html = `
 <div class="early-buyers-card">
     <div class="eb-header">
@@ -670,7 +787,7 @@ Example: "How much did [wallet] make on [token]"`);
     displayWalletTokenPnL(pnl) {
         const isProfitable = parseFloat(pnl.realizedPnL) > 0;
         const buyDate = pnl.firstBuy ? new Date(pnl.firstBuy * 1000).toLocaleDateString() : 'N/A';
-        
+
         const html = `
 <div class="token-pnl-card">
     <div class="tpnl-header">
@@ -729,7 +846,7 @@ Example: "How much did [wallet] make on [token]"`);
     displayWalletPnLPeriod(data) {
         const isProfitable = parseFloat(data.summary.realizedPnLSOL) > 0;
         const roiClass = parseFloat(data.summary.roi) > 0 ? 'positive' : parseFloat(data.summary.roi) < 0 ? 'negative' : '';
-        
+
         const html = `
 <div class="period-pnl-card">
     <div class="ppnl-header">
@@ -823,9 +940,9 @@ Example: "How much did [wallet] make on [token]"`);
 
     displayCopyTradeSimulation(sim) {
         const isProfitable = parseFloat(sim.results.pnlSOL) > 0;
-        const verdictClass = sim.verdict.rating.includes('🔥') || sim.verdict.rating.includes('✅') ? 'good' : 
-                            sim.verdict.rating.includes('❌') ? 'bad' : 'neutral';
-        
+        const verdictClass = sim.verdict.rating.includes('🔥') || sim.verdict.rating.includes('✅') ? 'good' :
+            sim.verdict.rating.includes('❌') ? 'bad' : 'neutral';
+
         const html = `
 <div class="copy-trade-card">
     <div class="ct-header">
@@ -938,7 +1055,7 @@ Example: "How much did [wallet] make on [token]"`);
         const topTokens = profile.balances.tokens
             .sort((a, b) => (b.amount || 0) - (a.amount || 0))
             .slice(0, 5);
-        
+
         const html = `
 <div class="wallet-card">
     <div class="wallet-header">
@@ -1148,14 +1265,14 @@ Example: "How much did [wallet] make on [token]"`);
 
         messageDiv.appendChild(contentDiv);
         this.chatMessages.appendChild(messageDiv);
-        
+
         // Scroll to bottom
         this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
     }
 
     setProcessing(processing) {
         this.isProcessing = processing;
-        
+
         if (processing) {
             const typingDiv = document.createElement('div');
             typingDiv.className = 'message assistant typing';
@@ -1182,9 +1299,9 @@ Example: "How much did [wallet] make on [token]"`);
         // Solana addresses are base58 encoded, 32-44 chars
         // They don't contain 0, O, I, l (to avoid confusion)
         const matches = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/g);
-        
+
         if (!matches) return null;
-        
+
         // Return the longest valid-looking match (prefer pump.fun style addresses)
         return matches.reduce((best, current) => {
             if (!best) return current;

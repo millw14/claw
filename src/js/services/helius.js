@@ -88,7 +88,7 @@ export class HeliusService {
             const now = Date.now() / 1000;
             const firstTx = transactions[transactions.length - 1];
             const lastTx = transactions[0];
-            
+
             // Calculate activity metrics
             const txCount = transactions.length;
             const timeSpan = firstTx ? (lastTx.timestamp - firstTx.timestamp) : 0;
@@ -147,8 +147,8 @@ export class HeliusService {
         }
 
         // Check for swap patterns (simplified)
-        const swapTxs = transactions.filter(tx => 
-            tx.type?.toLowerCase().includes('swap') || 
+        const swapTxs = transactions.filter(tx =>
+            tx.type?.toLowerCase().includes('swap') ||
             tx.description?.toLowerCase().includes('swap')
         );
         if (swapTxs.length > txCount * 0.5) {
@@ -177,12 +177,12 @@ export class HeliusService {
                     params: [mintAddress]
                 })
             });
-            
+
             const data = await response.json();
             if (data.error) throw new Error(data.error.message);
-            
+
             const tokenAccounts = data.result?.value?.slice(0, limit) || [];
-            
+
             if (tokenAccounts.length === 0) return [];
 
             // Now resolve each token account to get the owner wallet
@@ -202,10 +202,10 @@ export class HeliusService {
                                 ]
                             })
                         });
-                        
+
                         const ownerData = await ownerResponse.json();
                         const owner = ownerData.result?.value?.data?.parsed?.info?.owner;
-                        
+
                         return {
                             rank: index + 1,
                             address: owner || account.address,
@@ -245,7 +245,7 @@ export class HeliusService {
                     params: { id: mintAddress }
                 })
             });
-            
+
             const data = await response.json();
             return data.result;
         } catch (error) {
@@ -265,7 +265,7 @@ export class HeliusService {
     async getWalletPnL(walletAddress) {
         try {
             const transactions = await this.getTransactions(walletAddress, 100);
-            
+
             let totalBuys = 0;
             let totalSells = 0;
             let buyValue = 0;
@@ -277,12 +277,12 @@ export class HeliusService {
                 if (tx.type?.toLowerCase().includes('swap') || tx.description?.toLowerCase().includes('swap')) {
                     const tokenTransfers = tx.tokenTransfers || [];
                     const nativeTransfers = tx.nativeTransfers || [];
-                    
+
                     // Simplified: track SOL in/out as proxy for value
                     const solIn = nativeTransfers
                         .filter(t => t.toUserAccount === walletAddress)
                         .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
-                    
+
                     const solOut = nativeTransfers
                         .filter(t => t.fromUserAccount === walletAddress)
                         .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
@@ -325,7 +325,7 @@ export class HeliusService {
     async getWalletWinrate(walletAddress) {
         try {
             const transactions = await this.getTransactions(walletAddress, 100);
-            
+
             // Track token positions
             const tokenPositions = new Map(); // mint -> { totalBought, totalSold, avgBuyPrice }
             let wins = 0;
@@ -335,7 +335,7 @@ export class HeliusService {
             for (const tx of transactions) {
                 const tokenTransfers = tx.tokenTransfers || [];
                 const nativeTransfers = tx.nativeTransfers || [];
-                
+
                 for (const transfer of tokenTransfers) {
                     const mint = transfer.mint;
                     if (!mint) continue;
@@ -351,7 +351,7 @@ export class HeliusService {
                     }
 
                     const pos = tokenPositions.get(mint);
-                    
+
                     if (transfer.toUserAccount === walletAddress) {
                         // Received tokens (buy)
                         pos.bought += transfer.tokenAmount || 0;
@@ -370,7 +370,7 @@ export class HeliusService {
                 if (pos.sold > 0 && pos.buySpent > 0) {
                     const pnl = pos.sellReceived - pos.buySpent;
                     const roi = (pnl / pos.buySpent) * 100;
-                    
+
                     if (pnl > 0.001) {
                         wins++;
                         tokenResults.push({ mint, pnl, roi, result: 'win' });
@@ -409,13 +409,13 @@ export class HeliusService {
         try {
             // First get holders
             const holders = await this.getTokenHolders(tokenMint, 20);
-            
+
             // Analyze each holder's trading performance for this token
             const traderStats = await Promise.all(
                 holders.slice(0, 10).map(async (holder) => {
                     try {
                         const txs = await this.getTransactions(holder.address, 50);
-                        
+
                         // Filter for transactions involving this token
                         let bought = 0;
                         let sold = 0;
@@ -481,12 +481,12 @@ export class HeliusService {
     async getEarlyBuyers(tokenMint, stillHoldingOnly = false) {
         try {
             const holders = await this.getTokenHolders(tokenMint, 20);
-            
+
             const buyerData = await Promise.all(
                 holders.map(async (holder) => {
                     try {
                         const txs = await this.getTransactions(holder.address, 100);
-                        
+
                         // Find first buy of this token
                         let firstBuyTime = null;
                         let firstBuyAmount = 0;
@@ -495,7 +495,7 @@ export class HeliusService {
 
                         for (const tx of txs.reverse()) { // oldest first
                             const transfers = tx.tokenTransfers?.filter(t => t.mint === tokenMint) || [];
-                            
+
                             for (const transfer of transfers) {
                                 if (transfer.toUserAccount === holder.address) {
                                     totalBought += transfer.tokenAmount || 0;
@@ -548,7 +548,7 @@ export class HeliusService {
     async getWalletTokenPnL(walletAddress, tokenMint) {
         try {
             const txs = await this.getTransactions(walletAddress, 100);
-            
+
             let bought = 0;
             let sold = 0;
             let buySpent = 0;
@@ -624,10 +624,10 @@ export class HeliusService {
                 this.getTransactions(walletAddress, 200), // More transactions for longer period
                 this.getSolPrice()
             ]);
-            
+
             const cutoffTime = Date.now() / 1000 - (days * 24 * 60 * 60);
             const periodTxs = transactions.filter(tx => tx.timestamp >= cutoffTime);
-            
+
             let totalBuys = 0;
             let totalSells = 0;
             let buyValue = 0;
@@ -647,11 +647,11 @@ export class HeliusService {
 
                 const tokenTransfers = tx.tokenTransfers || [];
                 const nativeTransfers = tx.nativeTransfers || [];
-                
+
                 const solIn = nativeTransfers
                     .filter(t => t.toUserAccount === walletAddress)
                     .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
-                
+
                 const solOut = nativeTransfers
                     .filter(t => t.fromUserAccount === walletAddress)
                     .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
@@ -674,9 +674,9 @@ export class HeliusService {
                     const spent = solOut - solIn;
                     buyValue += spent;
                     tokenData.bought += spent;
-                    trades.push({ 
-                        type: 'buy', 
-                        sol: spent, 
+                    trades.push({
+                        type: 'buy',
+                        sol: spent,
                         usd: spent * solPrice,
                         token: tokenSymbol,
                         timestamp: tx.timestamp,
@@ -688,22 +688,22 @@ export class HeliusService {
                     const received = solIn - solOut;
                     sellValue += received;
                     tokenData.sold += received;
-                    
+
                     // Calculate trade PnL
                     const tradePnL = received - (tokenData.bought / Math.max(totalBuys, 1));
                     tokenData.pnl += tradePnL;
                     dailyPnL[date] += tradePnL;
-                    
+
                     if (tradePnL > biggestWin.value) {
                         biggestWin = { value: tradePnL, token: tokenSymbol };
                     }
                     if (tradePnL < biggestLoss.value) {
                         biggestLoss = { value: tradePnL, token: tokenSymbol };
                     }
-                    
-                    trades.push({ 
-                        type: 'sell', 
-                        sol: received, 
+
+                    trades.push({
+                        type: 'sell',
+                        sol: received,
                         usd: received * solPrice,
                         token: tokenSymbol,
                         pnl: tradePnL,
@@ -750,8 +750,8 @@ export class HeliusService {
                     token: biggestLoss.token
                 },
                 topTokens,
-                dailyPnL: Object.entries(dailyPnL).map(([date, pnl]) => ({ 
-                    date, 
+                dailyPnL: Object.entries(dailyPnL).map(([date, pnl]) => ({
+                    date,
                     pnlSOL: pnl.toFixed(4),
                     pnlUSD: (pnl * solPrice).toFixed(2)
                 })).slice(-14), // Last 14 days
@@ -770,10 +770,10 @@ export class HeliusService {
                 this.getTransactions(walletAddress, 200),
                 this.getSolPrice()
             ]);
-            
+
             const cutoffTime = Date.now() / 1000 - (days * 24 * 60 * 60);
             const periodTxs = transactions.filter(tx => tx.timestamp >= cutoffTime);
-            
+
             // Simulate copy trading with proportional position sizing
             let portfolio = investmentSOL;
             let portfolioHistory = [{ date: new Date(cutoffTime * 1000).toISOString().split('T')[0], value: investmentSOL }];
@@ -793,11 +793,11 @@ export class HeliusService {
 
                 const nativeTransfers = tx.nativeTransfers || [];
                 const tokenTransfers = tx.tokenTransfers || [];
-                
+
                 const solIn = nativeTransfers
                     .filter(t => t.toUserAccount === walletAddress)
                     .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
-                
+
                 const solOut = nativeTransfers
                     .filter(t => t.fromUserAccount === walletAddress)
                     .reduce((sum, t) => sum + (t.amount || 0), 0) / 1e9;
@@ -809,17 +809,17 @@ export class HeliusService {
                     // Original wallet bought - we copy with portion of our portfolio
                     const originalSpent = solOut - solIn;
                     const copySpent = Math.min(portfolio * 0.1, portfolio); // Max 10% per trade
-                    
+
                     if (copySpent > 0.001) {
                         portfolio -= copySpent;
-                        originalTrades.push({ 
-                            type: 'buy', 
-                            token, 
-                            originalSpent, 
+                        originalTrades.push({
+                            type: 'buy',
+                            token,
+                            originalSpent,
                             copySpent,
-                            timestamp: tx.timestamp 
+                            timestamp: tx.timestamp
                         });
-                        
+
                         tradesCopied.push({
                             type: 'BUY',
                             token,
@@ -831,21 +831,21 @@ export class HeliusService {
                 } else if (solIn > solOut) {
                     // Original wallet sold - calculate our proportional return
                     const originalReceived = solIn - solOut;
-                    
+
                     // Find matching buy
                     const matchingBuy = originalTrades.find(t => t.type === 'buy' && t.token === token);
-                    
+
                     if (matchingBuy) {
                         // Calculate ROI based on original trade
-                        const originalROI = matchingBuy.originalSpent > 0 
-                            ? (originalReceived / matchingBuy.originalSpent) 
+                        const originalROI = matchingBuy.originalSpent > 0
+                            ? (originalReceived / matchingBuy.originalSpent)
                             : 1;
-                        
+
                         const copyReceived = matchingBuy.copySpent * originalROI;
                         const tradePnL = copyReceived - matchingBuy.copySpent;
-                        
+
                         portfolio += copyReceived;
-                        
+
                         if (tradePnL > 0) {
                             wins++;
                             totalWinAmount += tradePnL;
@@ -853,7 +853,7 @@ export class HeliusService {
                             losses++;
                             totalLossAmount += Math.abs(tradePnL);
                         }
-                        
+
                         tradesCopied.push({
                             type: 'SELL',
                             token,
@@ -863,7 +863,7 @@ export class HeliusService {
                             date,
                             portfolioAfter: portfolio.toFixed(4)
                         });
-                        
+
                         // Remove used buy
                         const idx = originalTrades.indexOf(matchingBuy);
                         if (idx > -1) originalTrades.splice(idx, 1);
@@ -922,7 +922,7 @@ export class HeliusService {
         if (trades < 3) {
             return { rating: '⚠️', text: 'Not enough trades to evaluate', recommendation: 'Wait for more data' };
         }
-        
+
         if (roi > 100 && winrate > 60) {
             return { rating: '🔥', text: 'Exceptional Trader', recommendation: 'High potential copy target' };
         } else if (roi > 50 && winrate > 50) {
@@ -933,6 +933,98 @@ export class HeliusService {
             return { rating: '⚡', text: 'Mixed Results', recommendation: 'Higher risk, needs more analysis' };
         } else {
             return { rating: '❌', text: 'Underperforming', recommendation: 'Not recommended for copy trading' };
+        }
+    }
+
+    // ==================== WALLET SEARCH BY TOKENS ====================
+
+    // Find wallets that bought multiple tokens and optionally filter by SOL balance
+    async findWalletsByTokens(tokenMints, maxSolBalance = null) {
+        try {
+            if (!tokenMints || tokenMints.length === 0) {
+                throw new Error('At least one token address is required');
+            }
+
+            // Get holders for each token
+            const holdersByToken = await Promise.all(
+                tokenMints.map(async (mint) => {
+                    try {
+                        const holders = await this.getTokenHolders(mint, 50);
+                        return {
+                            mint,
+                            holders: holders.map(h => h.address)
+                        };
+                    } catch (e) {
+                        console.error(`Failed to fetch holders for ${mint}:`, e);
+                        return { mint, holders: [] };
+                    }
+                })
+            );
+
+            // Find intersection of wallets (wallets that hold ALL tokens)
+            let commonWallets = holdersByToken[0]?.holders || [];
+
+            for (let i = 1; i < holdersByToken.length; i++) {
+                const currentHolders = new Set(holdersByToken[i].holders);
+                commonWallets = commonWallets.filter(wallet => currentHolders.has(wallet));
+            }
+
+            if (commonWallets.length === 0) {
+                return {
+                    tokens: tokenMints,
+                    maxSolBalance,
+                    wallets: [],
+                    message: 'No wallets found that hold all specified tokens'
+                };
+            }
+
+            // For each common wallet, get balance info and filter by SOL
+            const walletDetails = await Promise.all(
+                commonWallets.slice(0, 20).map(async (address) => {
+                    try {
+                        const balances = await this.getBalances(address);
+                        const solBalance = balances.sol;
+
+                        // Check if wallet meets SOL balance criteria
+                        if (maxSolBalance !== null && solBalance > maxSolBalance) {
+                            return null;
+                        }
+
+                        // Get token holdings for our target tokens
+                        const tokenHoldings = tokenMints.map(mint => {
+                            const token = balances.tokens.find(t => t.mint === mint);
+                            return {
+                                mint,
+                                amount: token ? token.amount / Math.pow(10, token.decimals || 0) : 0,
+                                symbol: token?.symbol || 'Unknown'
+                            };
+                        });
+
+                        return {
+                            address,
+                            solBalance: solBalance.toFixed(4),
+                            tokenHoldings,
+                            meetsBalanceCriteria: true
+                        };
+                    } catch (e) {
+                        console.error(`Failed to fetch balance for ${address}:`, e);
+                        return null;
+                    }
+                })
+            );
+
+            const filteredWallets = walletDetails.filter(w => w !== null);
+
+            return {
+                tokens: tokenMints,
+                maxSolBalance,
+                totalFound: commonWallets.length,
+                filtered: filteredWallets.length,
+                wallets: filteredWallets.slice(0, 10)
+            };
+        } catch (error) {
+            console.error('Find wallets by tokens error:', error);
+            throw error;
         }
     }
 }

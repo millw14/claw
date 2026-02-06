@@ -2043,3 +2043,213 @@ body.chat-page {
         gap: 6px;
     }
 }
+
+/* ==================== WALLET SEARCH RESULTS ==================== */
+.wallet-search-card {
+    background: rgba(20, 20, 20, 0.9);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 10px;
+}
+
+.ws-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ws-header h4 {
+    margin: 0;
+    color: #fff;
+    font-size: 16px;
+}
+
+.ws-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.ws-count {
+    font-size: 13px;
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.ws-total {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.ws-tokens {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.ws-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ws-token-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.ws-token-badge {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(220, 38, 38, 0.15);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.ws-wallets {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.ws-wallet-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.ws-wallet-item:hover {
+    background: rgba(220, 38, 38, 0.1);
+    border-color: rgba(220, 38, 38, 0.2);
+}
+
+.ws-wallet-rank {
+    font-size: 12px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.4);
+    width: 28px;
+    text-align: center;
+}
+
+.ws-wallet-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ws-wallet-addr {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: #dc2626;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.ws-wallet-addr:hover {
+    color: #ef4444;
+}
+
+.ws-wallet-holdings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.ws-holding {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.ws-wallet-sol {
+    text-align: right;
+    min-width: 70px;
+}
+
+.ws-sol-balance {
+    font-size: 13px;
+    font-weight: 600;
+    color: #9945FF;
+}
+
+.ws-wallet-actions {
+    min-width: 70px;
+}
+
+.ws-action-btn {
+    padding: 6px 12px;
+    background: rgba(220, 38, 38, 0.2);
+    border: 1px solid rgba(220, 38, 38, 0.3);
+    border-radius: 6px;
+    color: #dc2626;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ws-action-btn:hover {
+    background: rgba(220, 38, 38, 0.3);
+    border-color: #dc2626;
+}
+
+.ws-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ws-tip {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+}
+
+/* Wallet Search Mobile Responsiveness */
+@media (max-width: 768px) {
+    .ws-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .ws-meta {
+        align-items: flex-start;
+    }
+    
+    .ws-tokens {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ws-wallet-item {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .ws-wallet-actions {
+        width: 100%;
+    }
+    
+    .ws-action-btn {
+        width: 100%;
+    }
+}

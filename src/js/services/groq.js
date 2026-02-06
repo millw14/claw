@@ -46,6 +46,14 @@ QUERY TYPES & COMMANDS:
 6. PRICE QUERIES:
    - "sol price/solana price" → GET_SOL_PRICE
 
+7. WALLET SEARCH BY TOKENS (needs multiple token addresses + optional balance):
+   - "find wallet that bought/holds token1 and token2" → FIND_WALLET_BY_TOKENS
+   - "wallet that holds X and Y with less than Z sol" → FIND_WALLET_BY_TOKENS
+   - "who bought both tokens" → FIND_WALLET_BY_TOKENS
+   - "looking for wallet that bought X, Y and is less than Z sol" → FIND_WALLET_BY_TOKENS
+   - Extract ALL token addresses mentioned (can be 2 or more)
+   - Extract maxBalance in SOL if "less than X sol" or "under X sol" mentioned
+
 SYNONYMS:
 - "best traders" / "most profitable" / "top earners" = GET_TOP_TRADERS
 - "diamond hands" / "still holding" / "early + holding" = GET_DIAMOND_HANDS
@@ -54,6 +62,7 @@ SYNONYMS:
 - "30 days" / "30d" / "monthly" / "last month" = 30 day period
 - "7 days" / "7d" / "weekly" / "last week" = 7 day period
 - "copy trade" / "copy trading" / "what if I copied" / "simulate" = SIMULATE_COPY_TRADE
+- "bought" / "holds" / "holding" = when looking for wallet by tokens
 
 RESPONSE FORMAT:
 {
@@ -61,6 +70,8 @@ RESPONSE FORMAT:
     "params": { 
         "address": "wallet_address_if_applicable",
         "token": "token_mint_if_applicable",
+        "tokens": ["token1", "token2"],  // for FIND_WALLET_BY_TOKENS
+        "maxBalance": number_in_sol,      // for FIND_WALLET_BY_TOKENS  
         "days": number_of_days_if_specified,
         "amount": investment_amount_in_sol_if_specified
     },
@@ -75,7 +86,9 @@ CONTEXT CLUES:
 - "wallet/portfolio/trader" + address = wallet address
 - If BOTH wallet and token mentioned, extract both
 - Numbers like "1 sol", "5 SOL", "10" before "copy" = investment amount
-- "in this coin" = token context, "this wallet" = wallet context`;
+- "less than X sol" / "under X sol" = maxBalance for wallet search
+- "in this coin" = token context, "this wallet" = wallet context
+- MULTIPLE token addresses in one query = FIND_WALLET_BY_TOKENS`;
     }
 
     async processQuery(userMessage, conversationHistory = []) {
